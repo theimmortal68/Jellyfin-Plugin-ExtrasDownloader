@@ -28,7 +28,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override string Description => "Downloads trailers, featurettes, and behind-the-scenes content from TMDB/YouTube.";
 
     /// <inheritdoc />
-    public override Guid Id => Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    public override Guid Id => Guid.Parse("d2a0abca-4598-4d40-97bc-f74966738645");
 
     /// <summary>
     /// Gets the current plugin instance.

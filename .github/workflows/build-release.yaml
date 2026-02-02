@@ -59,7 +59,7 @@ jobs:
 
           cat > dist/ExtrasDownloader/meta.json << EOF
           {
-              "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "guid": "d2a0abca-4598-4d40-97bc-f74966738645",
               "name": "Extras Downloader",
               "description": "Downloads trailers and extras from TMDB/YouTube",
               "overview": "Automatically downloads trailers, featurettes, behind-the-scenes content, and other extras for your movie and TV show library.",
