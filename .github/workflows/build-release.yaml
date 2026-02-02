@@ -45,9 +45,9 @@ jobs:
           # Copy plugin DLL
           cp Jellyfin.Plugin.ExtrasDownloader/bin/Release/Jellyfin.Plugin.ExtrasDownloader.dll dist/ExtrasDownloader/
 
-          # Copy POT server
+          # Copy POT server (TypeScript compiles to 'build' folder)
           mkdir -p dist/ExtrasDownloader/pot-server
-          cp -r Jellyfin.Plugin.ExtrasDownloader/pot-server/dist dist/ExtrasDownloader/pot-server/
+          cp -r Jellyfin.Plugin.ExtrasDownloader/pot-server/build dist/ExtrasDownloader/pot-server/
           cp Jellyfin.Plugin.ExtrasDownloader/pot-server/package.json dist/ExtrasDownloader/pot-server/
           cp Jellyfin.Plugin.ExtrasDownloader/pot-server/package-lock.json dist/ExtrasDownloader/pot-server/
 

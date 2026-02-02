@@ -124,7 +124,7 @@ public class PotServerManager : IDisposable
             return false;
         }
 
-        var mainScript = Path.Combine(serverDir, "dist", "main.js");
+        var mainScript = Path.Combine(serverDir, "build", "main.js");
         if (!File.Exists(mainScript))
         {
             _logger.LogWarning("POT server main script not found at {Path}", mainScript);

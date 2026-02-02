@@ -36,7 +36,7 @@
 
   <!-- Include POT server files (pre-built) as content -->
   <ItemGroup>
-    <Content Include="pot-server\dist\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server\dist" />
+    <Content Include="pot-server\build\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server\build" />
     <Content Include="pot-server\package.json" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server" />
     <Content Include="pot-server\package-lock.json" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server" />
   </ItemGroup>

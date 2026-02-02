@@ -51,10 +51,10 @@ mkdir -p "$PLUGIN_DIR"
 cp ./Jellyfin.Plugin.ExtrasDownloader/bin/Release/Jellyfin.Plugin.ExtrasDownloader.dll "$PLUGIN_DIR/"
 
 # Copy POT server if built
-if [ -d "$POT_SERVER_DIR/dist" ]; then
+if [ -d "$POT_SERVER_DIR/build" ]; then
     echo "Copying POT server files..."
     mkdir -p "$PLUGIN_DIR/pot-server"
-    cp -r "$POT_SERVER_DIR/dist" "$PLUGIN_DIR/pot-server/"
+    cp -r "$POT_SERVER_DIR/build" "$PLUGIN_DIR/pot-server/"
     cp "$POT_SERVER_DIR/package.json" "$PLUGIN_DIR/pot-server/"
     cp "$POT_SERVER_DIR/package-lock.json" "$PLUGIN_DIR/pot-server/"
 fi
