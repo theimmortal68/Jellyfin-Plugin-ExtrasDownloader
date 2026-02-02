@@ -39,20 +39,20 @@ public class TmdbVideoProvider
         try
         {
             var response = await _httpClient.GetFromJsonAsync<TmdbVideoResponse>(url, cancellationToken);
-            var videos = response?.Results ?? Array.Empty<TmdbVideo>();
+            var videos = response?.Results?.ToList() ?? new List<TmdbVideo>();
 
             // If no videos in preferred language, try English fallback
             if (videos.Count == 0 && lang != "en")
             {
                 url = $"{BaseUrl}/movie/{tmdbId}/videos?api_key={config.TmdbApiKey}&language=en";
                 response = await _httpClient.GetFromJsonAsync<TmdbVideoResponse>(url, cancellationToken);
-                videos = response?.Results ?? Array.Empty<TmdbVideo>();
+                videos = response?.Results?.ToList() ?? new List<TmdbVideo>();
             }
 
             // Also fetch videos without language filter to get all available
             url = $"{BaseUrl}/movie/{tmdbId}/videos?api_key={config.TmdbApiKey}";
             var allResponse = await _httpClient.GetFromJsonAsync<TmdbVideoResponse>(url, cancellationToken);
-            var allVideos = allResponse?.Results ?? Array.Empty<TmdbVideo>();
+            var allVideos = allResponse?.Results?.ToList() ?? new List<TmdbVideo>();
 
             // Merge and deduplicate
             var merged = videos
@@ -89,13 +89,13 @@ public class TmdbVideoProvider
         try
         {
             var response = await _httpClient.GetFromJsonAsync<TmdbVideoResponse>(url, cancellationToken);
-            var videos = response?.Results ?? Array.Empty<TmdbVideo>();
+            var videos = response?.Results?.ToList() ?? new List<TmdbVideo>();
 
             if (videos.Count == 0 && lang != "en")
             {
                 url = $"{BaseUrl}/tv/{tmdbId}/videos?api_key={config.TmdbApiKey}&language=en";
                 response = await _httpClient.GetFromJsonAsync<TmdbVideoResponse>(url, cancellationToken);
-                videos = response?.Results ?? Array.Empty<TmdbVideo>();
+                videos = response?.Results?.ToList() ?? new List<TmdbVideo>();
             }
 
             _logger.LogDebug("Found {Count} videos for TV show {TmdbId}", videos.Count, tmdbId);

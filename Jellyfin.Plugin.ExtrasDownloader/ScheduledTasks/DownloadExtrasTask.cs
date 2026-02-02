@@ -1,9 +1,11 @@
+using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.ExtrasDownloader.Downloaders;
 using Jellyfin.Plugin.ExtrasDownloader.Providers;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
