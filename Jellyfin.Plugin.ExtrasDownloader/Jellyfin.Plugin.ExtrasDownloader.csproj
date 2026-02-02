@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Jellyfin.Plugin.ExtrasDownloader</RootNamespace>
+    <AssemblyName>Jellyfin.Plugin.ExtrasDownloader</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- Output to a folder that can be copied to Jellyfin plugins -->
+  <PropertyGroup>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.9.*" />
+    <PackageReference Include="Jellyfin.Model" Version="10.9.*" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.*" />
+  </ItemGroup>
+
+  <!-- Exclude Jellyfin assemblies from output (they're provided by the server) -->
+  <ItemGroup>
+    <PackageReference Update="Jellyfin.Controller" PrivateAssets="all" />
+    <PackageReference Update="Jellyfin.Model" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Embed the configuration page HTML as a resource -->
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\configPage.html" />
+  </ItemGroup>
+
+  <!-- Include POT server files (pre-built) as content -->
+  <ItemGroup>
+    <Content Include="pot-server\dist\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server\dist" />
+    <Content Include="pot-server\package.json" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server" />
+    <Content Include="pot-server\package-lock.json" CopyToOutputDirectory="PreserveNewest" LinkBase="pot-server" />
+  </ItemGroup>
+
+</Project>

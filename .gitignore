@@ -1,0 +1,22 @@
+# Build outputs
+bin/
+obj/
+dist/
+
+# Node.js
+node_modules/
+*.log
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (don't commit API keys)
+*.secrets.json

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Extras Downloader</title>
+</head>
+<body>
+    <div id="ExtrasDownloaderConfigPage" data-role="page" class="page type-interior pluginConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="ExtrasDownloaderConfigForm">
+                    <div class="folderConfigurationForm">
+
+                        <!-- API Configuration -->
+                        <h3>API Configuration</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="TmdbApiKey">TMDB API Key (v3)</label>
+                            <input type="password" id="TmdbApiKey" name="TmdbApiKey" class="emby-input" />
+                            <div class="fieldDescription">
+                                Get your API key from <a href="https://www.themoviedb.org/settings/api" target="_blank">TMDB</a>
+                            </div>
+                        </div>
+
+                        <!-- yt-dlp Configuration -->
+                        <h3>yt-dlp Configuration</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="YtDlpPath">yt-dlp Path</label>
+                            <input type="text" id="YtDlpPath" name="YtDlpPath" class="emby-input" />
+                            <div class="fieldDescription">
+                                Path to yt-dlp executable. Default: "yt-dlp" (assumes it's in PATH)
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="CookiesFilePath">Cookies File Path</label>
+                            <input type="text" id="CookiesFilePath" name="CookiesFilePath" class="emby-input" />
+                            <div class="fieldDescription">
+                                Path to cookies.txt file for YouTube authentication (optional). Helps with age-restricted content.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="PotProviderUrl">POT Provider URL</label>
+                            <input type="text" id="PotProviderUrl" name="PotProviderUrl" class="emby-input" placeholder="http://localhost:4416" />
+                            <div class="fieldDescription">
+                                Proof of Origin Token provider URL for YouTube bot detection bypass (optional).
+                                See <a href="https://github.com/Brainicism/bgutil-ytdlp-pot-provider" target="_blank">bgutil-ytdlp-pot-provider</a>
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="VideoFormat">Video Format</label>
+                            <input type="text" id="VideoFormat" name="VideoFormat" class="emby-input" />
+                            <div class="fieldDescription">
+                                yt-dlp format string. Default: "bestvideo*+bestaudio/best"
+                            </div>
+                        </div>
+
+                        <!-- Content Types -->
+                        <h3>Content Types to Download</h3>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadTrailers" name="DownloadTrailers" class="emby-checkbox" />
+                                <span>Trailers</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadTeasers" name="DownloadTeasers" class="emby-checkbox" />
+                                <span>Teasers</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadFeaturettes" name="DownloadFeaturettes" class="emby-checkbox" />
+                                <span>Featurettes</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadBehindTheScenes" name="DownloadBehindTheScenes" class="emby-checkbox" />
+                                <span>Behind the Scenes</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadClips" name="DownloadClips" class="emby-checkbox" />
+                                <span>Clips</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadBloopers" name="DownloadBloopers" class="emby-checkbox" />
+                                <span>Bloopers</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadInterviews" name="DownloadInterviews" class="emby-checkbox" />
+                                <span>Interviews</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="DownloadShorts" name="DownloadShorts" class="emby-checkbox" />
+                                <span>Shorts</span>
+                            </label>
+                        </div>
+
+                        <!-- Filtering Options -->
+                        <h3>Filtering Options</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="MaxVideosPerType">Max Videos Per Type</label>
+                            <input type="number" id="MaxVideosPerType" name="MaxVideosPerType" min="1" max="10" class="emby-input" />
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="PreferredLanguages">Preferred Languages</label>
+                            <input type="text" id="PreferredLanguages" name="PreferredLanguages" class="emby-input" placeholder="en-US,de-DE" />
+                            <div class="fieldDescription">Comma-separated language codes (e.g., "en-US,de-DE")</div>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="PreferOfficialVideos" name="PreferOfficialVideos" class="emby-checkbox" />
+                                <span>Prefer Official Videos</span>
+                            </label>
+                            <div class="fieldDescription">Sort official videos first when multiple are available</div>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="OfficialVideosOnly" name="OfficialVideosOnly" class="emby-checkbox" />
+                                <span>Official Videos Only</span>
+                            </label>
+                            <div class="fieldDescription">Skip unofficial/fan uploads entirely</div>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="SkipExistingExtras" name="SkipExistingExtras" class="emby-checkbox" />
+                                <span>Skip Items With Existing Extras</span>
+                            </label>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="OnlyMissingTrailers" name="OnlyMissingTrailers" class="emby-checkbox" />
+                                <span>Only Process Items Missing Trailers</span>
+                            </label>
+                        </div>
+
+                        <!-- Output Configuration -->
+                        <h3>Output Configuration</h3>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="OrganizeIntoFolders" name="OrganizeIntoFolders" class="emby-checkbox" />
+                                <span>Organize Into Subfolders</span>
+                            </label>
+                            <div class="fieldDescription">Use Plex-compatible folder structure (Trailers, Featurettes, etc.)</div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="OutputFormat">Output Format</label>
+                            <select id="OutputFormat" name="OutputFormat" class="emby-select">
+                                <option value="mkv">MKV</option>
+                                <option value="mp4">MP4</option>
+                                <option value="webm">WebM</option>
+                            </select>
+                        </div>
+
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" id="EmbedSubtitles" name="EmbedSubtitles" class="emby-checkbox" />
+                                <span>Embed Subtitles</span>
+                            </label>
+                        </div>
+
+                        <!-- Rate Limiting -->
+                        <h3>Rate Limiting</h3>
+                        <div class="fieldDescription" style="margin-bottom: 1em;">
+                            These settings help avoid being blocked by YouTube. Higher values are safer but slower.
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SleepBetweenVideos">Sleep Between Videos (seconds)</label>
+                            <input type="number" id="SleepBetweenVideos" name="SleepBetweenVideos" min="0" max="600" class="emby-input" />
+                            <div class="fieldDescription">Wait time after downloading each video</div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SleepBetweenItems">Sleep Between Items (seconds)</label>
+                            <input type="number" id="SleepBetweenItems" name="SleepBetweenItems" min="0" max="1800" class="emby-input" />
+                            <div class="fieldDescription">Wait time after processing each movie/show</div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="YtDlpSleepInterval">yt-dlp Min Sleep (seconds)</label>
+                            <input type="number" id="YtDlpSleepInterval" name="YtDlpSleepInterval" min="0" max="300" class="emby-input" />
+                            <div class="fieldDescription">Minimum sleep between yt-dlp requests</div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="YtDlpMaxSleepInterval">yt-dlp Max Sleep (seconds)</label>
+                            <input type="number" id="YtDlpMaxSleepInterval" name="YtDlpMaxSleepInterval" min="0" max="600" class="emby-input" />
+                            <div class="fieldDescription">Maximum sleep between yt-dlp requests (randomized)</div>
+                        </div>
+
+                        <!-- Tracking -->
+                        <h3>Tracking</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ProcessedItemRetentionDays">Processed Item Retention (days)</label>
+                            <input type="number" id="ProcessedItemRetentionDays" name="ProcessedItemRetentionDays" min="1" max="365" class="emby-input" />
+                            <div class="fieldDescription">Re-check items after this many days</div>
+                        </div>
+
+                        <div>
+                            <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                                <span>Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var ExtrasDownloaderConfig = {
+                pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            };
+
+            document.querySelector('#ExtrasDownloaderConfigPage')
+                .addEventListener('pageshow', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(ExtrasDownloaderConfig.pluginUniqueId).then(function(config) {
+                        // API
+                        document.querySelector('#TmdbApiKey').value = config.TmdbApiKey || '';
+
+                        // yt-dlp
+                        document.querySelector('#YtDlpPath').value = config.YtDlpPath || 'yt-dlp';
+                        document.querySelector('#CookiesFilePath').value = config.CookiesFilePath || '';
+                        document.querySelector('#PotProviderUrl').value = config.PotProviderUrl || '';
+                        document.querySelector('#VideoFormat').value = config.VideoFormat || 'bestvideo*+bestaudio/best';
+
+                        // Content Types
+                        document.querySelector('#DownloadTrailers').checked = config.DownloadTrailers;
+                        document.querySelector('#DownloadTeasers').checked = config.DownloadTeasers;
+                        document.querySelector('#DownloadFeaturettes').checked = config.DownloadFeaturettes;
+                        document.querySelector('#DownloadBehindTheScenes').checked = config.DownloadBehindTheScenes;
+                        document.querySelector('#DownloadClips').checked = config.DownloadClips;
+                        document.querySelector('#DownloadBloopers').checked = config.DownloadBloopers;
+                        document.querySelector('#DownloadInterviews').checked = config.DownloadInterviews;
+                        document.querySelector('#DownloadShorts').checked = config.DownloadShorts;
+
+                        // Filtering
+                        document.querySelector('#MaxVideosPerType').value = config.MaxVideosPerType || 3;
+                        document.querySelector('#PreferredLanguages').value = config.PreferredLanguages || 'en-US';
+                        document.querySelector('#PreferOfficialVideos').checked = config.PreferOfficialVideos;
+                        document.querySelector('#OfficialVideosOnly').checked = config.OfficialVideosOnly;
+                        document.querySelector('#SkipExistingExtras').checked = config.SkipExistingExtras;
+                        document.querySelector('#OnlyMissingTrailers').checked = config.OnlyMissingTrailers;
+
+                        // Output
+                        document.querySelector('#OrganizeIntoFolders').checked = config.OrganizeIntoFolders;
+                        document.querySelector('#OutputFormat').value = config.OutputFormat || 'mkv';
+                        document.querySelector('#EmbedSubtitles').checked = config.EmbedSubtitles;
+
+                        // Rate Limiting
+                        document.querySelector('#SleepBetweenVideos').value = config.SleepBetweenVideos || 60;
+                        document.querySelector('#SleepBetweenItems').value = config.SleepBetweenItems || 300;
+                        document.querySelector('#YtDlpSleepInterval').value = config.YtDlpSleepInterval || 30;
+                        document.querySelector('#YtDlpMaxSleepInterval').value = config.YtDlpMaxSleepInterval || 120;
+
+                        // Tracking
+                        document.querySelector('#ProcessedItemRetentionDays').value = config.ProcessedItemRetentionDays || 7;
+
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#ExtrasDownloaderConfigForm')
+                .addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(ExtrasDownloaderConfig.pluginUniqueId).then(function(config) {
+                        // API
+                        config.TmdbApiKey = document.querySelector('#TmdbApiKey').value;
+
+                        // yt-dlp
+                        config.YtDlpPath = document.querySelector('#YtDlpPath').value;
+                        config.CookiesFilePath = document.querySelector('#CookiesFilePath').value;
+                        config.PotProviderUrl = document.querySelector('#PotProviderUrl').value;
+                        config.VideoFormat = document.querySelector('#VideoFormat').value;
+
+                        // Content Types
+                        config.DownloadTrailers = document.querySelector('#DownloadTrailers').checked;
+                        config.DownloadTeasers = document.querySelector('#DownloadTeasers').checked;
+                        config.DownloadFeaturettes = document.querySelector('#DownloadFeaturettes').checked;
+                        config.DownloadBehindTheScenes = document.querySelector('#DownloadBehindTheScenes').checked;
+                        config.DownloadClips = document.querySelector('#DownloadClips').checked;
+                        config.DownloadBloopers = document.querySelector('#DownloadBloopers').checked;
+                        config.DownloadInterviews = document.querySelector('#DownloadInterviews').checked;
+                        config.DownloadShorts = document.querySelector('#DownloadShorts').checked;
+
+                        // Filtering
+                        config.MaxVideosPerType = parseInt(document.querySelector('#MaxVideosPerType').value, 10);
+                        config.PreferredLanguages = document.querySelector('#PreferredLanguages').value;
+                        config.PreferOfficialVideos = document.querySelector('#PreferOfficialVideos').checked;
+                        config.OfficialVideosOnly = document.querySelector('#OfficialVideosOnly').checked;
+                        config.SkipExistingExtras = document.querySelector('#SkipExistingExtras').checked;
+                        config.OnlyMissingTrailers = document.querySelector('#OnlyMissingTrailers').checked;
+
+                        // Output
+                        config.OrganizeIntoFolders = document.querySelector('#OrganizeIntoFolders').checked;
+                        config.OutputFormat = document.querySelector('#OutputFormat').value;
+                        config.EmbedSubtitles = document.querySelector('#EmbedSubtitles').checked;
+
+                        // Rate Limiting
+                        config.SleepBetweenVideos = parseInt(document.querySelector('#SleepBetweenVideos').value, 10);
+                        config.SleepBetweenItems = parseInt(document.querySelector('#SleepBetweenItems').value, 10);
+                        config.YtDlpSleepInterval = parseInt(document.querySelector('#YtDlpSleepInterval').value, 10);
+                        config.YtDlpMaxSleepInterval = parseInt(document.querySelector('#YtDlpMaxSleepInterval').value, 10);
+
+                        // Tracking
+                        config.ProcessedItemRetentionDays = parseInt(document.querySelector('#ProcessedItemRetentionDays').value, 10);
+
+                        ApiClient.updatePluginConfiguration(ExtrasDownloaderConfig.pluginUniqueId, config).then(function() {
+                            Dashboard.processPluginConfigurationUpdateResult();
+                        });
+                    });
+                    return false;
+                });
+        </script>
+    </div>
+</body>
+</html>
