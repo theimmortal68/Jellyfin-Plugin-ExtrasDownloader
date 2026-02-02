@@ -1,0 +1,98 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build POT Server
+        working-directory: Jellyfin.Plugin.ExtrasDownloader/pot-server
+        run: |
+          npm ci
+          npm run build || npx tsc
+
+      - name: Build Plugin
+        run: dotnet build -c Release
+
+      - name: Create Package
+        run: |
+          mkdir -p dist/ExtrasDownloader
+
+          # Copy plugin DLL
+          cp Jellyfin.Plugin.ExtrasDownloader/bin/Release/Jellyfin.Plugin.ExtrasDownloader.dll dist/ExtrasDownloader/
+
+          # Copy POT server
+          mkdir -p dist/ExtrasDownloader/pot-server
+          cp -r Jellyfin.Plugin.ExtrasDownloader/pot-server/dist dist/ExtrasDownloader/pot-server/
+          cp Jellyfin.Plugin.ExtrasDownloader/pot-server/package.json dist/ExtrasDownloader/pot-server/
+          cp Jellyfin.Plugin.ExtrasDownloader/pot-server/package-lock.json dist/ExtrasDownloader/pot-server/
+
+          # Create meta.json
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            VERSION="2.0.0"
+          fi
+
+          cat > dist/ExtrasDownloader/meta.json << EOF
+          {
+              "guid": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+              "name": "Extras Downloader",
+              "description": "Downloads trailers and extras from TMDB/YouTube",
+              "overview": "Automatically downloads trailers, featurettes, behind-the-scenes content, and other extras for your movie and TV show library.",
+              "owner": "theimmortal68",
+              "category": "Metadata",
+              "versions": [
+                  {
+                      "version": "${VERSION}.0",
+                      "changelog": "See GitHub releases for changelog",
+                      "targetAbi": "10.9.0.0",
+                      "sourceUrl": "https://github.com/theimmortal68/Jellyfin-Plugin-ExtrasDownloader/releases/download/v${VERSION}/ExtrasDownloader.zip",
+                      "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                  }
+              ]
+          }
+          EOF
+
+      - name: Create ZIP
+        run: |
+          cd dist
+          zip -r ExtrasDownloader.zip ExtrasDownloader
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ExtrasDownloader
+          path: dist/ExtrasDownloader.zip
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/ExtrasDownloader.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
