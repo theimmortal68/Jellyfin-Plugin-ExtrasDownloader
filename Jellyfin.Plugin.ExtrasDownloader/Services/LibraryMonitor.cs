@@ -143,6 +143,27 @@ public class ExtrasDownloadQueue
     public bool HasPendingItems => !_highPriorityQueue.IsEmpty || !_normalPriorityQueue.IsEmpty;
 
     /// <summary>
+    /// Gets the total number of items in the queue.
+    /// </summary>
+    public int Count => _highPriorityQueue.Count + _normalPriorityQueue.Count;
+
+    /// <summary>
+    /// Enqueues an item for extras download, bypassing the "recently processed" check.
+    /// Used for manual/forced downloads.
+    /// </summary>
+    public void EnqueueForced(ExtrasDownloadRequest request)
+    {
+        // Remove from processed items so it will be processed again
+        _processedItems.TryRemove(request.ItemId, out _);
+
+        var queue = request.Priority == DownloadPriority.High ? _highPriorityQueue : _normalPriorityQueue;
+        queue.Enqueue(request);
+
+        _logger.LogInformation("Force-queued {Name} for extras download (priority: {Priority})",
+            request.ItemName, request.Priority);
+    }
+
+    /// <summary>
     /// Enqueues an item for extras download.
     /// </summary>
     public void Enqueue(ExtrasDownloadRequest request)
