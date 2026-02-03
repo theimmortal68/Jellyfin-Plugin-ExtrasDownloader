@@ -2,6 +2,7 @@ using System.Net.Mime;
 using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.ExtrasDownloader.Downloaders;
+using Jellyfin.Plugin.ExtrasDownloader.Providers;
 using Jellyfin.Plugin.ExtrasDownloader.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -27,17 +28,20 @@ public class ExtrasDownloaderController : ControllerBase
     private readonly ILibraryManager _libraryManager;
     private readonly ExtrasDownloadQueue _downloadQueue;
     private readonly YtDlpDownloader _ytDlpDownloader;
+    private readonly TmdbVideoProvider _tmdbVideoProvider;
     private readonly ILogger<ExtrasDownloaderController> _logger;
 
     public ExtrasDownloaderController(
         ILibraryManager libraryManager,
         ExtrasDownloadQueue downloadQueue,
         YtDlpDownloader ytDlpDownloader,
+        TmdbVideoProvider tmdbVideoProvider,
         ILogger<ExtrasDownloaderController> logger)
     {
         _libraryManager = libraryManager;
         _downloadQueue = downloadQueue;
         _ytDlpDownloader = ytDlpDownloader;
+        _tmdbVideoProvider = tmdbVideoProvider;
         _logger = logger;
     }
 
@@ -176,6 +180,82 @@ public class ExtrasDownloaderController : ControllerBase
             ExtractedAt = DateTime.UtcNow
         });
     }
+
+    /// <summary>
+    /// Get available videos for a movie or TV show from TMDB.
+    /// </summary>
+    /// <param name="tmdbId">The TMDB ID of the movie or TV show.</param>
+    /// <param name="type">The item type: "movie" or "tv".</param>
+    /// <param name="extraType">Optional filter by video type: Trailer, Teaser, Featurette, etc.</param>
+    /// <param name="officialOnly">If true, only return official videos.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of available videos with type information.</returns>
+    [HttpGet("Videos/{tmdbId:int}")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<VideosResponse>> GetVideos(
+        [FromRoute] int tmdbId,
+        [FromQuery] string type = "movie",
+        [FromQuery] string? extraType = null,
+        [FromQuery] bool officialOnly = false,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Videos requested for TMDB {TmdbId} ({Type}), extraType={ExtraType}, officialOnly={OfficialOnly}",
+            tmdbId, type, extraType, officialOnly);
+
+        IReadOnlyList<TmdbVideo> videos;
+
+        if (type.Equals("tv", StringComparison.OrdinalIgnoreCase) ||
+            type.Equals("series", StringComparison.OrdinalIgnoreCase))
+        {
+            videos = await _tmdbVideoProvider.GetTvShowVideosAsync(tmdbId, cancellationToken: cancellationToken);
+        }
+        else
+        {
+            videos = await _tmdbVideoProvider.GetMovieVideosAsync(tmdbId, cancellationToken: cancellationToken);
+        }
+
+        // Filter by extra type if specified
+        IEnumerable<TmdbVideo> filtered = videos;
+
+        if (!string.IsNullOrEmpty(extraType))
+        {
+            filtered = filtered.Where(v => v.Type.Equals(extraType, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (officialOnly)
+        {
+            filtered = filtered.Where(v => v.Official);
+        }
+
+        // Only include YouTube videos (supported by yt-dlp)
+        filtered = filtered.Where(v => v.Site.Equals("YouTube", StringComparison.OrdinalIgnoreCase));
+
+        // Order: official first, then by published date (newest first)
+        var result = filtered
+            .OrderByDescending(v => v.Official)
+            .ThenByDescending(v => v.PublishedAt)
+            .Select(v => new VideoInfo
+            {
+                Key = v.Key,
+                Name = v.Name,
+                Type = v.Type,
+                Official = v.Official,
+                PublishedAt = v.PublishedAt,
+                Language = v.Language,
+                Size = v.Size
+            })
+            .ToList();
+
+        _logger.LogInformation("Returning {Count} videos for TMDB {TmdbId}", result.Count, tmdbId);
+
+        return Ok(new VideosResponse
+        {
+            TmdbId = tmdbId,
+            Videos = result
+        });
+    }
 }
 
 #region Response Models
@@ -204,6 +284,39 @@ public class StreamUrlResponse
 
     [JsonPropertyName("error")]
     public string? Error { get; set; }
+}
+
+public class VideosResponse
+{
+    [JsonPropertyName("tmdbId")]
+    public int TmdbId { get; set; }
+
+    [JsonPropertyName("videos")]
+    public List<VideoInfo> Videos { get; set; } = new();
+}
+
+public class VideoInfo
+{
+    [JsonPropertyName("key")]
+    public string Key { get; set; } = string.Empty;
+
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty;
+
+    [JsonPropertyName("official")]
+    public bool Official { get; set; }
+
+    [JsonPropertyName("publishedAt")]
+    public DateTime? PublishedAt { get; set; }
+
+    [JsonPropertyName("language")]
+    public string? Language { get; set; }
+
+    [JsonPropertyName("size")]
+    public int Size { get; set; }
 }
 
 #endregion
