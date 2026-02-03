@@ -131,7 +131,8 @@ public class DownloadExtrasTask : IScheduledTask
             Recursive = true
         };
 
-        return _libraryManager.GetItemList(query);
+        var result = _libraryManager.GetItemsResult(query);
+        return result.Items;
     }
 
     private async Task<int> ProcessItemAsync(BaseItem item, CancellationToken cancellationToken)
