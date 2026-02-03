@@ -69,7 +69,7 @@ jobs:
                   {
                       "version": "${VERSION}.0",
                       "changelog": "See GitHub releases for changelog",
-                      "targetAbi": "10.9.0.0",
+                      "targetAbi": "10.10.0.0",
                       "sourceUrl": "https://github.com/theimmortal68/Jellyfin-Plugin-ExtrasDownloader/releases/download/v${VERSION}/ExtrasDownloader.zip",
                       "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
                   }

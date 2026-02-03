@@ -122,7 +122,7 @@ public class DownloadExtrasTask : IScheduledTask
             processed, downloaded, failed);
     }
 
-    private List<BaseItem> GetLibraryItems()
+    private IReadOnlyList<BaseItem> GetLibraryItems()
     {
         var query = new InternalItemsQuery
         {

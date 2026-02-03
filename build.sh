@@ -72,7 +72,7 @@ cat > "$PLUGIN_DIR/meta.json" << 'EOF'
         {
             "version": "2.0.0.0",
             "changelog": "Added automatic download on new media, POT server integration for YouTube bot bypass",
-            "targetAbi": "10.9.0.0",
+            "targetAbi": "10.10.0.0",
             "sourceUrl": "",
             "checksum": "",
             "timestamp": ""
