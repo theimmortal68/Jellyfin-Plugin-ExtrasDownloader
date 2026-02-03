@@ -42,13 +42,13 @@ public class YtDlpDownloader
             return null;
         }
 
-        // Build safe filename - use video key as temp name to avoid special character issues
-        var safeName = SanitizeFileName(video.Name);
-        var suffix = video.JellyfinSuffix;
+        // Build clean filename - folder-based organization handles the type
+        var cleanName = CleanVideoTitle(video.Name, video.Type);
+        var safeName = SanitizeFileName(cleanName);
 
         // Download using video ID as filename (avoids special character issues)
         var tempOutputTemplate = Path.Combine(outputDirectory, $"{video.Key}.%(ext)s");
-        var finalFileName = $"{safeName}{suffix}";
+        var finalFileName = safeName; // No suffix - rely on folder-based detection
 
         // Build yt-dlp arguments
         var args = BuildArguments(video.Url, tempOutputTemplate, config);
@@ -70,7 +70,7 @@ public class YtDlpDownloader
             var downloadedFile = FindDownloadedFile(outputDirectory, video.Key, string.Empty);
             if (downloadedFile != null)
             {
-                // Rename to final name with suffix
+                // Rename to clean final name
                 var extension = Path.GetExtension(downloadedFile);
                 var finalPath = Path.Combine(outputDirectory, $"{finalFileName}{extension}");
 
@@ -262,17 +262,82 @@ public class YtDlpDownloader
         return new ProcessResult(process.ExitCode, stdOut.ToString(), stdErr.ToString());
     }
 
+    /// <summary>
+    /// Cleans up video title by removing quality indicators, promotional text, etc.
+    /// For trailers/teasers, extracts just the trailer identifier (e.g., "Official Trailer", "Trailer 2").
+    /// </summary>
+    private static string CleanVideoTitle(string name, string videoType)
+    {
+        // For trailers and teasers, try to extract just the trailer identifier
+        if (videoType is "Trailer" or "Teaser")
+        {
+            return ExtractTrailerName(name);
+        }
+
+        var cleaned = name;
+
+        // Remove common quality indicators (case insensitive)
+        cleaned = Regex.Replace(cleaned, @"\b(HD|4K|UHD|1080p|720p|2160p|IMAX)\b", "", RegexOptions.IgnoreCase);
+
+        // Remove everything after pipe (promotional text)
+        cleaned = Regex.Replace(cleaned, @"\s*\|\s*.*$", "");
+
+        // Remove everything after dash followed by cast/credits
+        cleaned = Regex.Replace(cleaned, @"\s+-\s+[A-Z][a-z]+(\s+[A-Z][a-z]+)*(,\s*[A-Z][a-z]+(\s+[A-Z][a-z]+)*)*\s*$", "");
+
+        // Remove year in parentheses (e.g., "(2018)" or "(2018 Movie)")
+        cleaned = Regex.Replace(cleaned, @"\s*\(\d{4}[^)]*\)", "");
+
+        // Clean up multiple spaces
+        cleaned = Regex.Replace(cleaned, @"\s+", " ");
+        cleaned = cleaned.Trim();
+
+        // If the title became empty or too short, use original name
+        if (string.IsNullOrWhiteSpace(cleaned) || cleaned.Length < 3)
+        {
+            cleaned = name.Trim();
+        }
+
+        return cleaned;
+    }
+
+    /// <summary>
+    /// Extracts a clean trailer name like "Official Trailer", "Trailer 2", "Final Trailer", etc.
+    /// </summary>
+    private static string ExtractTrailerName(string name)
+    {
+        // Try to find trailer/teaser identifier with optional number or descriptor
+        // Matches: "Official Trailer", "Trailer 2", "Final Trailer", "Teaser", "Official Teaser #1"
+        var trailerMatch = Regex.Match(name,
+            @"(Official\s+)?(Final\s+|International\s+|Red\s+Band\s+)?(Trailer|Teaser)(\s+#?\d+)?",
+            RegexOptions.IgnoreCase);
+
+        if (trailerMatch.Success)
+        {
+            var result = trailerMatch.Value.Trim();
+            // Normalize casing
+            result = Regex.Replace(result, @"\b(\w)", m => m.Value.ToUpperInvariant());
+            // Normalize "Trailer #1" to "Trailer 1"
+            result = Regex.Replace(result, @"#(\d+)", "$1");
+            return result;
+        }
+
+        // Fallback: just return "Trailer" for trailer type
+        return "Trailer";
+    }
+
     private static string SanitizeFileName(string name)
     {
-        var sanitized = InvalidFileChars.Replace(name, "_");
-        // Also replace multiple spaces/underscores with single underscore
-        sanitized = Regex.Replace(sanitized, @"[\s_]+", "_");
-        // Trim underscores from ends
-        sanitized = sanitized.Trim('_');
+        // Remove invalid file system characters
+        var sanitized = InvalidFileChars.Replace(name, " ");
+        // Clean up multiple spaces (but preserve single spaces)
+        sanitized = Regex.Replace(sanitized, @"\s+", " ");
+        // Trim spaces from ends
+        sanitized = sanitized.Trim();
         // Limit length
         if (sanitized.Length > 100)
         {
-            sanitized = sanitized[..100];
+            sanitized = sanitized[..100].TrimEnd();
         }
         return sanitized;
     }
