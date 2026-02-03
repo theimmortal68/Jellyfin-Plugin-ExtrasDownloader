@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using System.Text.Json.Serialization;
 using Jellyfin.Data.Enums;
 using Jellyfin.Plugin.ExtrasDownloader.Downloaders;
 using Jellyfin.Plugin.ExtrasDownloader.Services;
@@ -195,8 +196,13 @@ public class StatusResponse
 
 public class StreamUrlResponse
 {
+    [JsonPropertyName("streamUrl")]
     public string? StreamUrl { get; set; }
+
+    [JsonPropertyName("extractedAt")]
     public DateTime ExtractedAt { get; set; }
+
+    [JsonPropertyName("error")]
     public string? Error { get; set; }
 }
 
