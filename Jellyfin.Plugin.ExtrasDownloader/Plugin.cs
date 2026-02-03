@@ -44,6 +44,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             {
                 Name = Name,
                 EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
+            },
+            new PluginPageInfo
+            {
+                Name = "ExtrasDownloaderJs",
+                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.menuScript.js",
+                EnableInMainMenu = false
             }
         };
     }

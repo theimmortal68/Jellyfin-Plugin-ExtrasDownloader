@@ -31,9 +31,10 @@
     <PackageReference Update="Jellyfin.Model" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Embed the configuration page HTML as a resource -->
+  <!-- Embed the configuration page HTML and menu script as resources -->
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\menuScript.js" />
   </ItemGroup>
 
   <!-- Include POT server files (pre-built) as content -->

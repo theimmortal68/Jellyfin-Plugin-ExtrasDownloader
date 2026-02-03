@@ -1,12 +1,13 @@
 // Extras Downloader - Context Menu Integration
-// This script adds a "Download Extras" option to the context menu for Movies and Series
+// Adds "Download Extras" to the More menu on Movie/Series detail pages
 
 (function() {
     'use strict';
 
-    const PLUGIN_ID = 'd2a0abca-4598-4d40-97bc-f74966738645';
+    const MENU_ITEM_ID = 'extrasDownloader';
+    const SUPPORTED_TYPES = ['Movie', 'Series'];
 
-    // Function to call the download API
+    // Call the download API
     async function downloadExtras(itemId, itemName) {
         try {
             const response = await ApiClient.ajax({
@@ -35,38 +36,76 @@
         }
     }
 
-    // Hook into Jellyfin's context menu system
-    function addContextMenuItem() {
-        // Check if we've already added our menu item
-        if (window.ExtrasDownloaderMenuAdded) {
-            return;
+    // Get current item info from the page
+    function getCurrentItemInfo() {
+        // Try URL params first
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+
+        if (itemId) {
+            return { id: itemId };
         }
-
-        // Listen for the context menu to be shown
-        document.addEventListener('contextmenu', function(e) {
-            // This is a fallback - the main integration is through itemcontextmenu event
-        });
-
-        // The proper way to add context menu items in Jellyfin
-        if (typeof window.addEventListener === 'function') {
-            window.addEventListener('message', function(event) {
-                if (event.data && event.data.type === 'showitemcontextmenu') {
-                    // This would be the proper hook point
-                }
-            });
-        }
-
-        window.ExtrasDownloaderMenuAdded = true;
+        return null;
     }
 
-    // Alternative: Add a button to the detail page
-    function addDetailPageButton() {
-        // Observer to watch for detail pages being loaded
+    // Check if we're on a supported item type
+    async function isSupportedItem(itemId) {
+        try {
+            const item = await ApiClient.getItem(ApiClient.getCurrentUserId(), itemId);
+            return SUPPORTED_TYPES.includes(item.Type);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Create our menu item element
+    function createMenuItem(itemId, itemName) {
+        const menuItem = document.createElement('button');
+        menuItem.setAttribute('is', 'paper-icon-button-light');
+        menuItem.className = 'listItem listItem-button actionSheetMenuItem';
+        menuItem.setAttribute('data-id', MENU_ITEM_ID);
+
+        menuItem.innerHTML = `
+            <span class="actionsheetMenuItemIcon listItemIcon listItemIcon-transparent material-icons download"></span>
+            <div class="listItemBody actionsheetListItemBody">
+                <div class="listItemBodyText actionSheetItemText">Download Extras</div>
+            </div>
+        `;
+
+        menuItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Close the menu
+            const dialog = document.querySelector('.actionSheet');
+            if (dialog) {
+                const closeBtn = dialog.querySelector('.btnCloseActionSheet');
+                if (closeBtn) closeBtn.click();
+            }
+
+            // Trigger download
+            downloadExtras(itemId, itemName || 'item');
+        });
+
+        return menuItem;
+    }
+
+    // Watch for the action sheet menu to appear and inject our item
+    function watchForMenu() {
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
-                if (mutation.addedNodes.length) {
-                    checkForDetailPage();
-                }
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) {
+                        // Check if an action sheet was added
+                        const actionSheet = node.classList?.contains('actionSheet')
+                            ? node
+                            : node.querySelector?.('.actionSheet');
+
+                        if (actionSheet) {
+                            handleActionSheet(actionSheet);
+                        }
+                    }
+                });
             });
         });
 
@@ -74,62 +113,87 @@
             childList: true,
             subtree: true
         });
-
-        // Also check on page show
-        document.addEventListener('viewshow', checkForDetailPage);
     }
 
-    function checkForDetailPage() {
-        // Look for the item detail page
-        const detailPage = document.querySelector('.itemDetailPage');
-        if (!detailPage) return;
-
-        // Check if we already added our button
-        if (detailPage.querySelector('.btnDownloadExtras')) return;
-
-        // Get item info from the page
-        const itemId = getItemIdFromPage();
-        if (!itemId) return;
-
-        // Find the button container (usually near Refresh Metadata, etc.)
-        const moreCommandsButton = detailPage.querySelector('.btnMoreCommands');
-        if (!moreCommandsButton) return;
-
-        // We'll add our functionality through the more menu
-        // For now, let's try to hook into the existing menu system
-    }
-
-    function getItemIdFromPage() {
-        // Try to get item ID from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const itemId = urlParams.get('id');
-        if (itemId) return itemId;
-
-        // Try to get from the page data
-        const detailPage = document.querySelector('.itemDetailPage');
-        if (detailPage && detailPage.getAttribute('data-id')) {
-            return detailPage.getAttribute('data-id');
+    // Handle when action sheet appears
+    async function handleActionSheet(actionSheet) {
+        // Check if we already added our item
+        if (actionSheet.querySelector(`[data-id="${MENU_ITEM_ID}"]`)) {
+            return;
         }
 
-        return null;
-    }
+        // Check if this looks like an item details menu (has Refresh metadata, Edit metadata, etc.)
+        const menuItems = actionSheet.querySelectorAll('.actionSheetMenuItem');
+        let isItemMenu = false;
+        let insertAfter = null;
 
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            addContextMenuItem();
-            addDetailPageButton();
+        menuItems.forEach(function(item) {
+            const text = item.textContent?.toLowerCase() || '';
+            if (text.includes('refresh metadata') || text.includes('edit metadata')) {
+                isItemMenu = true;
+                insertAfter = item;
+            }
         });
-    } else {
-        addContextMenuItem();
-        addDetailPageButton();
+
+        if (!isItemMenu) {
+            return;
+        }
+
+        // Get current item
+        const itemInfo = getCurrentItemInfo();
+        if (!itemInfo) {
+            return;
+        }
+
+        // Check if it's a supported type
+        const supported = await isSupportedItem(itemInfo.id);
+        if (!supported) {
+            return;
+        }
+
+        // Get item name for the notification
+        let itemName = 'item';
+        try {
+            const item = await ApiClient.getItem(ApiClient.getCurrentUserId(), itemInfo.id);
+            itemName = item.Name;
+        } catch (e) {
+            // Use default
+        }
+
+        // Create and insert our menu item
+        const menuItem = createMenuItem(itemInfo.id, itemName);
+
+        if (insertAfter && insertAfter.parentNode) {
+            insertAfter.parentNode.insertBefore(menuItem, insertAfter.nextSibling);
+        } else {
+            // Fallback: add to the end of the menu
+            const menuList = actionSheet.querySelector('.actionSheetScroller');
+            if (menuList) {
+                menuList.appendChild(menuItem);
+            }
+        }
     }
 
-    // Export for manual use
-    window.ExtrasDownloader = {
-        downloadExtras: downloadExtras,
-        PLUGIN_ID: PLUGIN_ID
-    };
+    // Initialize
+    function init() {
+        if (window.ExtrasDownloaderInitialized) {
+            return;
+        }
+        window.ExtrasDownloaderInitialized = true;
 
-    console.log('Extras Downloader menu script loaded');
+        watchForMenu();
+        console.log('Extras Downloader menu integration loaded');
+    }
+
+    // Wait for page to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Export for debugging
+    window.ExtrasDownloader = {
+        downloadExtras: downloadExtras
+    };
 })();
