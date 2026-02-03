@@ -94,6 +94,55 @@ public class YtDlpDownloader
     }
 
     /// <summary>
+    /// Gets the direct stream URL for a YouTube video without downloading.
+    /// </summary>
+    /// <param name="youtubeUrl">The YouTube video URL.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The direct stream URL, or null if extraction failed.</returns>
+    public async Task<string?> GetStreamUrlAsync(string youtubeUrl, CancellationToken cancellationToken = default)
+    {
+        var config = Plugin.Instance?.Configuration;
+        if (config == null)
+        {
+            _logger.LogError("Plugin configuration not available");
+            return null;
+        }
+
+        var args = BuildStreamUrlArguments(youtubeUrl, config);
+
+        _logger.LogInformation("Extracting stream URL for {Url}", youtubeUrl);
+        _logger.LogDebug("yt-dlp args: {Args}", args);
+
+        try
+        {
+            var result = await RunYtDlpAsync(config.YtDlpPath, args, null, cancellationToken);
+
+            if (result.ExitCode != 0)
+            {
+                _logger.LogError("yt-dlp stream URL extraction failed with exit code {ExitCode}: {Error}", result.ExitCode, result.StdErr);
+                return null;
+            }
+
+            // Return the first line of stdout (the stream URL)
+            var streamUrl = result.StdOut.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.Trim();
+
+            if (string.IsNullOrEmpty(streamUrl))
+            {
+                _logger.LogError("yt-dlp returned empty stream URL");
+                return null;
+            }
+
+            _logger.LogInformation("Successfully extracted stream URL for {Url}", youtubeUrl);
+            return streamUrl;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to extract stream URL for {Url}", youtubeUrl);
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Checks if yt-dlp is available.
     /// </summary>
     public async Task<bool> IsAvailableAsync()
@@ -193,6 +242,40 @@ public class YtDlpDownloader
 
         // Progress output for parsing
         sb.Append("--newline --progress ");
+
+        // The URL
+        sb.Append($"\"{url}\"");
+
+        return sb.ToString();
+    }
+
+    private static string BuildStreamUrlArguments(string url, PluginConfiguration config)
+    {
+        var sb = new StringBuilder();
+
+        // Get URL only, no download
+        sb.Append("-g ");
+
+        // Format selection: best combined stream up to 1080p
+        sb.Append("-f \"best[height<=1080]/best\" ");
+
+        // Cookies file support
+        if (!string.IsNullOrEmpty(config.CookiesFilePath) && File.Exists(config.CookiesFilePath))
+        {
+            sb.Append($"--cookies \"{config.CookiesFilePath}\" ");
+        }
+
+        // POT provider support
+        if (!string.IsNullOrEmpty(config.PotProviderUrl))
+        {
+            sb.Append($"--extractor-args \"youtubepot-bgutilhttp:base_url={config.PotProviderUrl}\" ");
+        }
+
+        // Extra user-specified arguments
+        if (!string.IsNullOrEmpty(config.ExtraYtDlpArgs))
+        {
+            sb.Append($"{config.ExtraYtDlpArgs.Trim()} ");
+        }
 
         // The URL
         sb.Append($"\"{url}\"");

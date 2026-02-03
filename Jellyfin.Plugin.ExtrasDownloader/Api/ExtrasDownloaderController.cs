@@ -1,5 +1,6 @@
 using System.Net.Mime;
 using Jellyfin.Data.Enums;
+using Jellyfin.Plugin.ExtrasDownloader.Downloaders;
 using Jellyfin.Plugin.ExtrasDownloader.Services;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
@@ -24,15 +25,18 @@ public class ExtrasDownloaderController : ControllerBase
 {
     private readonly ILibraryManager _libraryManager;
     private readonly ExtrasDownloadQueue _downloadQueue;
+    private readonly YtDlpDownloader _ytDlpDownloader;
     private readonly ILogger<ExtrasDownloaderController> _logger;
 
     public ExtrasDownloaderController(
         ILibraryManager libraryManager,
         ExtrasDownloadQueue downloadQueue,
+        YtDlpDownloader ytDlpDownloader,
         ILogger<ExtrasDownloaderController> logger)
     {
         _libraryManager = libraryManager;
         _downloadQueue = downloadQueue;
+        _ytDlpDownloader = ytDlpDownloader;
         _logger = logger;
     }
 
@@ -124,6 +128,53 @@ public class ExtrasDownloaderController : ControllerBase
             QueueCount = _downloadQueue.Count
         });
     }
+
+    /// <summary>
+    /// Get a direct stream URL for a YouTube video.
+    /// </summary>
+    /// <param name="videoKey">The YouTube video key (e.g., "dQw4w9WgXcQ").</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The direct stream URL.</returns>
+    [HttpGet("StreamUrl")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<StreamUrlResponse>> GetStreamUrl(
+        [FromQuery] string videoKey,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(videoKey))
+        {
+            return BadRequest(new StreamUrlResponse
+            {
+                StreamUrl = null,
+                ExtractedAt = DateTime.UtcNow,
+                Error = "videoKey parameter is required"
+            });
+        }
+
+        _logger.LogInformation("Stream URL requested for video key: {VideoKey}", videoKey);
+
+        var youtubeUrl = $"https://www.youtube.com/watch?v={videoKey}";
+        var streamUrl = await _ytDlpDownloader.GetStreamUrlAsync(youtubeUrl, cancellationToken);
+
+        if (string.IsNullOrEmpty(streamUrl))
+        {
+            _logger.LogWarning("Failed to extract stream URL for video key: {VideoKey}", videoKey);
+            return BadRequest(new StreamUrlResponse
+            {
+                StreamUrl = null,
+                ExtractedAt = DateTime.UtcNow,
+                Error = "Failed to extract stream URL"
+            });
+        }
+
+        return Ok(new StreamUrlResponse
+        {
+            StreamUrl = streamUrl,
+            ExtractedAt = DateTime.UtcNow
+        });
+    }
 }
 
 #region Response Models
@@ -140,6 +191,13 @@ public class StatusResponse
 {
     public bool HasPendingItems { get; set; }
     public int QueueCount { get; set; }
+}
+
+public class StreamUrlResponse
+{
+    public string? StreamUrl { get; set; }
+    public DateTime ExtractedAt { get; set; }
+    public string? Error { get; set; }
 }
 
 #endregion
