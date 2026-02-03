@@ -268,8 +268,9 @@ public class YtDlpDownloader
     /// </summary>
     private static string CleanVideoTitle(string name, string videoType)
     {
-        // For trailers and teasers, try to extract just the trailer identifier
-        if (videoType is "Trailer" or "Teaser")
+        // For trailers and teasers, try to extract just the trailer identifier (case-insensitive check)
+        if (string.Equals(videoType, "Trailer", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(videoType, "Teaser", StringComparison.OrdinalIgnoreCase))
         {
             return ExtractTrailerName(name);
         }
@@ -302,23 +303,32 @@ public class YtDlpDownloader
     }
 
     /// <summary>
-    /// Extracts a clean trailer name like "Official Trailer", "Trailer 2", "Final Trailer", etc.
+    /// Extracts a clean trailer name like "Official Trailer", "Trailer 2", "Final Trailer", "IMAX Trailer", etc.
     /// </summary>
     private static string ExtractTrailerName(string name)
     {
-        // Try to find trailer/teaser identifier with optional number or descriptor
-        // Matches: "Official Trailer", "Trailer 2", "Final Trailer", "Teaser", "Official Teaser #1"
+        // Try to find trailer/teaser identifier with optional prefix and number
+        // Matches: "Official Trailer", "Trailer 2", "Final Trailer", "IMAX Trailer", "Teaser", "Official Teaser #1"
         var trailerMatch = Regex.Match(name,
-            @"(Official\s+)?(Final\s+|International\s+|Red\s+Band\s+)?(Trailer|Teaser)(\s+#?\d+)?",
+            @"(Official\s+|IMAX\s+)?(Final\s+|International\s+|Red\s+Band\s+)?(Trailer|Teaser)(\s+#?\d+)?",
             RegexOptions.IgnoreCase);
 
         if (trailerMatch.Success)
         {
             var result = trailerMatch.Value.Trim();
-            // Normalize casing
+
+            // Remove aspect ratios like "1.90" that might have been captured
+            result = Regex.Replace(result, @"\s*\d+\.\d+\s*", " ");
+
+            // Clean up multiple spaces
+            result = Regex.Replace(result, @"\s+", " ").Trim();
+
+            // Normalize casing (title case)
             result = Regex.Replace(result, @"\b(\w)", m => m.Value.ToUpperInvariant());
+
             // Normalize "Trailer #1" to "Trailer 1"
             result = Regex.Replace(result, @"#(\d+)", "$1");
+
             return result;
         }
 
