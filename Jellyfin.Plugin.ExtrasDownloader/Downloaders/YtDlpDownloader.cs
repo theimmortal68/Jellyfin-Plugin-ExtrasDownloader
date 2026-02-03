@@ -179,6 +179,18 @@ public class YtDlpDownloader
         sb.Append($"--sleep-interval {config.YtDlpSleepInterval} ");
         sb.Append($"--max-sleep-interval {config.YtDlpMaxSleepInterval} ");
 
+        // ffmpeg location (if specified)
+        if (!string.IsNullOrEmpty(config.FfmpegPath))
+        {
+            sb.Append($"--ffmpeg-location \"{config.FfmpegPath}\" ");
+        }
+
+        // Extra user-specified arguments (e.g., --js-runtimes nodejs)
+        if (!string.IsNullOrEmpty(config.ExtraYtDlpArgs))
+        {
+            sb.Append($"{config.ExtraYtDlpArgs.Trim()} ");
+        }
+
         // Progress output for parsing
         sb.Append("--newline --progress ");
 

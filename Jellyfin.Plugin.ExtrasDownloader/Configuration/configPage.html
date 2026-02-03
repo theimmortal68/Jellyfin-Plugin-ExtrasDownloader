@@ -58,6 +58,22 @@
                             </div>
                         </div>
 
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="FfmpegPath">FFmpeg Path</label>
+                            <input type="text" id="FfmpegPath" name="FfmpegPath" class="emby-input" placeholder="/usr/bin/ffmpeg" />
+                            <div class="fieldDescription">
+                                Path to ffmpeg executable. Leave empty to use system PATH.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ExtraYtDlpArgs">Extra yt-dlp Arguments</label>
+                            <input type="text" id="ExtraYtDlpArgs" name="ExtraYtDlpArgs" class="emby-input" placeholder="--js-runtimes nodejs" />
+                            <div class="fieldDescription">
+                                Additional arguments to pass to yt-dlp (e.g., "--js-runtimes nodejs" for YouTube)
+                            </div>
+                        </div>
+
                         <!-- Content Types -->
                         <h3>Content Types to Download</h3>
 
@@ -226,6 +242,8 @@
                         document.querySelector('#CookiesFilePath').value = config.CookiesFilePath || '';
                         document.querySelector('#PotProviderUrl').value = config.PotProviderUrl || '';
                         document.querySelector('#VideoFormat').value = config.VideoFormat || 'bestvideo*+bestaudio/best';
+                        document.querySelector('#FfmpegPath').value = config.FfmpegPath || '';
+                        document.querySelector('#ExtraYtDlpArgs').value = config.ExtraYtDlpArgs || '';
 
                         // Content Types
                         document.querySelector('#DownloadTrailers').checked = config.DownloadTrailers;
@@ -276,6 +294,8 @@
                         config.CookiesFilePath = document.querySelector('#CookiesFilePath').value;
                         config.PotProviderUrl = document.querySelector('#PotProviderUrl').value;
                         config.VideoFormat = document.querySelector('#VideoFormat').value;
+                        config.FfmpegPath = document.querySelector('#FfmpegPath').value;
+                        config.ExtraYtDlpArgs = document.querySelector('#ExtraYtDlpArgs').value;
 
                         // Content Types
                         config.DownloadTrailers = document.querySelector('#DownloadTrailers').checked;

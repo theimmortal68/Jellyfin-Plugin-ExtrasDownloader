@@ -26,6 +26,18 @@ public class PluginConfiguration : BasePluginConfiguration
     public string YtDlpPath { get; set; } = "yt-dlp";
 
     /// <summary>
+    /// Gets or sets the path to ffmpeg executable.
+    /// Leave empty to use system PATH.
+    /// </summary>
+    public string FfmpegPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets extra arguments to pass to yt-dlp.
+    /// Example: --js-runtimes nodejs --verbose
+    /// </summary>
+    public string ExtraYtDlpArgs { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the path to cookies.txt file for YouTube authentication.
     /// </summary>
     public string CookiesFilePath { get; set; } = string.Empty;
